@@ -1,0 +1,10 @@
+build:
+  box: tcnksm/gox:1.4.1
+  steps:
+    - setup-go-workspace:
+        package-dir: github.com/wercker/dlyaer
+    - termie/glide-build:
+        build: false
+    - tcnksm/gox:
+        os: "darwin linux" # OS to cross-compile
+        arch: "amd64"          # ARCH to cross-compile

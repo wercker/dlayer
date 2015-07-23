@@ -1,0 +1,4 @@
+package: github.com/wercker/dlayer
+import:
+  - package: github.com/fsouza/go-dockerclient
+  - package: github.com/codegangsta/cli
