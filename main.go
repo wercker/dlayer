@@ -110,6 +110,7 @@ func cmdSizes(opts *DockerOptions) error {
 	var allFoundSize int64
 	allSharedLayers := map[string]docker.APIImages{}
 	var allSharedSize int64
+	var virtualSize int64
 
 	// calculate shared information between tagged images
 	for _, image := range stats.TaggedMap {
@@ -121,14 +122,19 @@ func cmdSizes(opts *DockerOptions) error {
 			len(layers),
 			image.VirtualSize/(1024*1024),
 		)
+		virtualSize += image.VirtualSize
 
 		for _, layer := range layers {
 			if _, ok := allFoundLayers[layer.ID]; ok {
-				allSharedLayers[layer.ID] = layer
-				allSharedSize += layer.Size
+				// add it if it isn't already there
+				if _, ok := allSharedLayers[layer.ID]; !ok {
+					allSharedLayers[layer.ID] = layer
+					allSharedSize += layer.Size
+				}
+			} else {
+				allFoundLayers[layer.ID] = layer
+				allFoundSize += layer.Size
 			}
-			allFoundLayers[layer.ID] = layer
-			allFoundSize += layer.Size
 		}
 	}
 
@@ -136,20 +142,25 @@ func cmdSizes(opts *DockerOptions) error {
 	for _, image := range stats.ImageMap {
 		totalSize += image.Size
 	}
+
 	fmt.Printf(
-		"Total    : %4d layers - %5dMB (actual)\n",
+		"Total    : %4d layers - %6dMB (actual)\n",
 		len(stats.ImageMap),
 		totalSize/(1024*1024),
 	)
 
 	fmt.Printf(
-		"Reachable: %4d layers - %5dMB (actual)\n",
+		"Reachable: %4d layers - %6dMB (actual)\n",
 		len(allFoundLayers),
 		allFoundSize/(1024*1024),
 	)
+	fmt.Printf(
+		"                         %6dMB (virtual)\n",
+		virtualSize/(1024*1024),
+	)
 
 	fmt.Printf(
-		"Shared   : %4d layers - %5dMB (actual)\n",
+		"Shared   : %4d layers - %6dMB (actual)\n",
 		len(allSharedLayers),
 		allSharedSize/(1024*1024),
 	)
