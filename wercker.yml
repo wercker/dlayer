@@ -5,6 +5,26 @@ build:
         package-dir: github.com/wercker/dlyaer
     - termie/glide-build:
         build: false
-    - tcnksm/gox:
-        os: "darwin linux" # OS to cross-compile
-        arch: "amd64"          # ARCH to cross-compile
+    - script:
+        name: gox
+        code: |
+            gox \
+              -os="linux darwin" \
+              -arch="amd64 386" \
+              -output "$WERCKER_OUTPUT_DIR/pkg/{{.OS}}_{{.Arch}}/dlayer"
+    - script:
+        name: prepare
+        code: |
+            echo $WERCKER_GIT_COMMIT > $WERCKER_OUTPUT_DIR/HEAD
+            mv $WERCKER_OUTPUT_DIR/pkg $WERCKER_OUTPUT_DIR/latest
+            cp -r $WERCKER_OUTPUT_DIR/latest $WERCKER_OUTPUT_DIR/$WERCKER_GIT_COMMIT
+
+deploy:
+  box: ubuntu:12.04
+  steps:
+    - s3sync:
+        source-dir: "."
+        delete-removed: false
+        bucket-url: $AWS_BUCKET_URL/$WERCKER_GIT_BRANCH/
+        key-id: $AWS_ACCESS_KEY_ID
+        key-secret: $AWS_SECRET_ACCESS_KEY
