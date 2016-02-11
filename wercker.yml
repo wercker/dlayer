@@ -2,7 +2,7 @@ build:
   box: tcnksm/gox:1.4.1
   steps:
     - setup-go-workspace:
-        package-dir: github.com/wercker/dlyaer
+        package-dir: github.com/wercker/dlayer
     - termie/glide-build:
         build: false
     - script:
